@@ -1,3 +1,10 @@
+# General
+.DS_Store
+
+# Build
+build
+myui
+
 # Object files
 *.o
 *.ko
