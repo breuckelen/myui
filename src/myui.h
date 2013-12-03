@@ -12,4 +12,4 @@ char * readInput(FILE *fp);
 int numPairs(char *data);
 KeyValue * parseInput(char *data);
 void printReverse(KeyValue *dict, int len);
-int main();
+int main(int argc, char **argv);

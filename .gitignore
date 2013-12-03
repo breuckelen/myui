@@ -5,6 +5,9 @@
 build
 myui
 
+# Data
+*.dat
+
 # Object files
 *.o
 *.ko
