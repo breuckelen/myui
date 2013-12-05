@@ -1,13 +1,13 @@
 CC = gcc -ggdb -g
 
-all: build build/keyboard.o build/xterm_control.o build/myui.o build/mystore
-	$(CC) build/keyboard.o build/xterm_control.o build/myui.o -o myui
+all: build build/keyboard.o build/xterm_control.o build/shelter.o build/mystore
+	$(CC) build/keyboard.o build/xterm_control.o build/shelter.o -o shelter
 
 build/mystore:
 	$(CC) lib/mystore.c -o build/mystore
 
-build/myui.o:
-	$(CC) -c src/myui.c -o build/myui.o
+build/shelter.o:
+	$(CC) -c src/shelter.c -o build/shelter.o
 
 build/xterm_control.o:
 	$(CC) -c lib/xterm_control.c -o build/xterm_control.o

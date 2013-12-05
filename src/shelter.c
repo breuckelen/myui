@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include "myui.h"
+#include "shelter.h"
 
 
 char * readInput(FILE *fp) {

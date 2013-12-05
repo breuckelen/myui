@@ -1,0 +1,50 @@
+                                                                        Shelter                                                                       
+=====================================================================================================================================================
+                                                              a twitter clone in the shell                                                            
+=====================================================================================================================================================
+               _____               _____                        author:  Benjamin Attal                      _________     _____     _____           
+              | ----  ||   ||     | ----     ||                 nitems:  5                                   --- | ---    | ----    | .  /           
+              ||      |\___/|     | ____     ||                 version: 1.0                                    |||       |_____    | __ \           
+              ||      |/   \|     | ----     ||                 status:  OK                                     |||       | ----    | | | |          
+         _____||      ||   ||     |_____     |_____                                                             |||       |_____    ||| |||          
+         -----                     -----      -----             press ? for help page                                      -----                     
+______________________________________________________________________________________________________________________________________________________
+                                                                                                       ||                                             
+                                                EDIT A TWIG                                            ||                  VIEW TWIGS                
+====================================================================================================== || ============================================
+                                                                                                       ||            <                   >           
+ subject: This area will be limited to a certain number of lines. Focusing on an element in VIEW       || --------------------------------------------
+          TWIGS will bring this screen up here.                                                        || 1 | subject: This area will be limited to   
+                                                                                                       ||   |          a certain number of lines...   
+                                                                                                       ||   |                                         
+                                                                                                       ||   | body:    These sections are only      
+ body:    Well, the 'VIEW TWIGS' section will be limited to fewer characters / lines with a 'preview'  ||   |          previews of the full text...   
+          like feature.  This section will have a larger limit, and you can edit the different fields  ||   |                                         
+          here with relative ease.  Check out the help page.  Arma virumque cano Troiae qui primus ab  ||   | --------------------------------------- 
+          oris Italiam, fato profugus, Laviniaque venit litoro, multum ille et terris iactatus et      || 2 | subject: This area will be limited to   
+          alto.                                                                                        ||   |          a certain number of lines...   
+                                                                                                       ||   |                                         
+                                                                                                       ||   | body:    These sections are only      
+                                                                                                       ||   |          previews of the full text...   
+                                                                                                       ||   |                                         
+                                                                                                       ||   | --------------------------------------- 
+                                                                                                       || 3 | subject: This area will be limited to   
+                                              ADD A NEW TWIG                                           ||   |          a certain number of lines...   
+====================================================================================================== ||   |                                         
+                                                                                                       ||   | body:    These sections are only      
+ subject: I've entered some text for the subject                                                       ||   |          previews of the full text...   
+                                                                                                       ||   |                                         
+                                                                                                       ||   | --------------------------------------- 
+                                                                                                       || 4 | subject: This area will be limited to   
+                                                                                                       ||   |          a certain number of lines...   
+ body: I'm now focused in, and writing in the body, and all I need to do is hit enter to submit this   ||   |                                         
+                                                                                                       ||   | body:    These sections are only      
+                                                                                                       ||   |          previews of the full text...   
+                                                                                                       ||   |                                         
+                                                                                                       ||   | --------------------------------------- 
+                                                                                                       || 5 | subject: This area will be limited to   
+                                                                                                       ||   |          a certain number of lines...   
+                                                                                                       ||   |                                         
+                                                                                                       ||   | body:    These sections are only        
+                                                                                                       ||   |          previews of the full text...   
+                                                                                                       ||   | --------------------------------------- 
