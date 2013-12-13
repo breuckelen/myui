@@ -1,15 +1,24 @@
-#define CHUNK_SIZE 50
+#define TRUE 1
+#define FALSE 0
+#define QUIT KEY_F1
 
-struct KeyValue {
-    char * key;
-    char * value;
+struct Point {
+    int row;
+    int col;
 };
+typedef struct Point Point;
 
-typedef struct KeyValue KeyValue;
+struct Buffer {
+    Point tl;
+    Point br;
+};
+typedef struct Buffer Buffer;
 
+struct Map {
+    Buffer grid[2][2];
+};
+typedef struct Map Map;
 
-char * readInput(FILE *fp);
-int numPairs(char *data);
-KeyValue * parseInput(char *data);
-void printReverse(KeyValue *dict, int len);
-int main(int argc, char **argv);
+void init();
+void keypress();
+int main();

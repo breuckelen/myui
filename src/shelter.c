@@ -2,124 +2,124 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include "../lib/keyboard.h"
+#include "../lib/xterm_control.h"
 #include "shelter.h"
+#include "utils.h"
+#include "graphics.h"
 
+char buffer[SCREEN_HEIGHT][SCREEN_WIDTH];
+Twig *twigs;
+int twigs_size;
+Map layout;
+Buffer statusBar;
+Point focus;
+int _quit = 0;
 
-char * readInput(FILE *fp) {
-    char * rawData = (char *)calloc(CHUNK_SIZE + 1, sizeof(char));
-    char * temp = (char *)calloc(CHUNK_SIZE + 1, sizeof(char));
-    int count = 0;
+void init() {
+    //Initializing twig array
+    twigs = (Twig *)malloc(20 * sizeof(Twig));
+    twigs_size = numTwigs();
 
-    while(fgets(temp, CHUNK_SIZE, fp) != NULL) {
-        rawData = (char *)realloc(rawData, CHUNK_SIZE * ++count * sizeof(char) + 1);
-        strcat(rawData, temp);
-    }
+    //Grid for layout
+    Buffer grid[2][2];
 
-    return rawData;
+    //Initializing points
+    Point tl = {
+        .row = 5,
+        .col = 65
+    };
+    Point br = {
+        .row = 8,
+        .col = 88
+    };
+
+    //Status bar
+    Buffer bar = {
+        .tl = tl,
+        .br = br
+    };
+    statusBar = bar;
+
+    //Point of focus
+    Point pof = {
+        .row = 1,
+        .col = 1
+    };
+    focus = pof;
+
+    //Section for editing twigs
+    tl.row = 15;
+    tl.col = 1;
+    br.row = 31;
+    br.col = 103;
+    Buffer editTwig = {
+        .tl = tl,
+        .br = br
+    };
+    grid[0][0] = editTwig;
+
+    //Section for searching twigs
+    tl.row = 15;
+    tl.col = 107;
+    br.row = 15;
+    br.col = 149;
+    Buffer searchTwigs = {
+        .tl = tl,
+        .br = br
+    };
+    grid[0][1] = searchTwigs;
+
+    //Section for adding twigs
+    tl.row = 34;
+    tl.col = 1;
+    br.row = 50;
+    br.col = 103;
+    Buffer addTwig = {
+        .tl = tl,
+        .br = br
+    };
+    grid[1][0] = addTwig;
+
+    //Section for viewing twigs
+    tl.row = 17;
+    tl.col = 110;
+    br.row = 50;
+    br.col = 149;
+    Buffer viewTwigs = {
+        .tl = tl,
+        .br = br
+    };
+    grid[1][1] = viewTwigs;
+
+    //Create the map and assign to the global variable 'layout'
+    Map map = {
+        .grid = grid
+    };
+    layout = map;
+
+    //Populate twigs array
+    loadTwigs();
+
+    //Rendering
+    getScreen();
+    render();
 }
 
-
-int numPairs(char *data) {
-    int count = 0;
-    while(*data) {
-        if(*data++ == '|') {
-            count++;
-        }
+void keypress() {
+    char c;
+    if((c = getkey()) != KEY_NOTHING) {
+        if(c == QUIT)
+            _quit = 1;
+        render();
     }
-    return count / 2;
 }
 
+//update functions (for the screen)
 
-KeyValue * parseInput(char *data) {
-    int size = numPairs(data);
-    KeyValue * dict = (KeyValue *)calloc(size + 1, sizeof(KeyValue));
-    KeyValue * copy = dict;
-
-    int isKey = 1;
-    while (*data) {
-        if(*data == '|') {
-            if(isKey) {
-                dict->key = ++data;
-            } else {
-                *data = '\0';
-                isKey = 1;
-            }
-        } else if(*data == ' ') {
-            if(isKey) {
-                (dict++)->value = ++data;
-                isKey = 0;
-            }
-        } else if(*data == ':') {
-            if(isKey) {
-                *data = '\0';
-            }
-        }
-        data++;
+int main() {
+    init();
+    while(!_quit) {
+        keypress();
     }
-
-    return copy;
-}
-
-
-void printReverse(KeyValue *dict, int len) {
-    int i;
-
-    printf("{\n");
-    for(i = len - 1; i >= 0; i--) {
-        printf("\t%s: %s\n", dict[i].key, dict[i].value);
-    }
-    printf("}\n");
-}
-
-
-int main(int argc, char **argv) {
-    int pid, status;
-    int mypipe[2];
-
-    // create the pipe
-    if (pipe(mypipe) == -1) {
-        perror("Error creating the pipe\n");
-        return 1;
-    }
-          
-    // fork
-    pid = fork();
-    if(pid == -1) {
-        perror("Error forking\n");
-        exit(1);
-    } else if(pid == 0) {
-        // while loop to continually read data, send when enter is pressed
-        char ** newargv = (char **)calloc(argc + 1, sizeof(char *));
-        int i;
-
-        close(mypipe[0]);
-        dup2(mypipe[1], STDOUT_FILENO);
-
-        for(i = 1; i < argc; i++) {
-            newargv[i] = argv[i];
-        }
-        newargv[0] = "./build/mystore";
-        newargv[argc] = NULL;
-        execvp(newargv[0], newargv);
-
-        close(mypipe[1]);
-        exit(0);
-    } else {
-        FILE * fp;
-        char * buffer;
-        int n;
-
-        close(mypipe[1]);
-        wait(&status);
-
-        if ((fp = fdopen(mypipe[0], "r")) == NULL) {
-            perror("Error opening file descriptor\n");
-        }
-        buffer = readInput(fp);
-        int len = numPairs(buffer);
-        printReverse(parseInput(buffer), len);
-
-        close(mypipe[0]);
-    }
-    exit(0);
 }
