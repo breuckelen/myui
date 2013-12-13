@@ -35,3 +35,5 @@
 * the section with '< >' signifies the search bar
 
 * moving up to the search bar and entering a term will filter the twigs with this term in the subject or body
+
+* the backspace key will delete a twig and refresh the array of twigs
