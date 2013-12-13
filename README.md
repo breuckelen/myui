@@ -1,4 +1,4 @@
-myui
-====
+shelter
+======
 
-Twitter-like utility for individual organization purposes.  Writte in C.
+A twitter clone in the shell.
