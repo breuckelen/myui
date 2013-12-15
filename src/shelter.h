@@ -1,24 +1,22 @@
+#pragma once
 #define TRUE 1
 #define FALSE 0
 #define QUIT KEY_F1
 
-struct Point {
-    int row;
-    int col;
+struct Twig {
+    char * subject;
+    char * message;
 };
-typedef struct Point Point;
+typedef struct Twig Twig;
 
-struct Buffer {
-    Point tl;
-    Point br;
-};
-typedef struct Buffer Buffer;
-
-struct Map {
-    Buffer grid[2][2];
-};
-typedef struct Map Map;
-
+//Initialization
 void init();
+
+//Update functions
+void update_viewTwigs();
+
+//Event detection
 void keypress();
+
+//Main loop
 int main();

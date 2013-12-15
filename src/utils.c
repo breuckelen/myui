@@ -5,8 +5,8 @@
 #include "utils.h"
 #include "shelter.h"
 
-extern Twig *twigs;
-extern int twigs_size;
+Twig *twigs;
+int twigs_size;
 KeyValue *dump;
 
 char * readInput(FILE *fp) {
@@ -141,4 +141,8 @@ void addTwig(char *subject, char *message) {
     twigs[twigs_size++] = twig;
     char *cmd[3] = {"add", subject, message};
     runCommand(4, cmd);
+}
+
+void editTwig(int index, char *subject, char *message) {
+
 }

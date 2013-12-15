@@ -8,21 +8,27 @@
 #include "utils.h"
 #include "graphics.h"
 
+//Screen is rendered from this buffer
 char buffer[SCREEN_HEIGHT][SCREEN_WIDTH];
-Twig *twigs;
-int twigs_size;
-Map layout;
+
+//Twigs
+extern Twig *twigs;
+extern int twigs_size;
+int twigs_start;
+
+//UI structs
+Buffer grid[2][2];
 Buffer statusBar;
 Point focus;
+
+//Whether to quit or not
 int _quit = 0;
 
 void init() {
     //Initializing twig array
     twigs = (Twig *)malloc(20 * sizeof(Twig));
     twigs_size = numTwigs();
-
-    //Grid for layout
-    Buffer grid[2][2];
+    twigs_start = 0;
 
     //Initializing points
     Point tl = {
@@ -82,7 +88,7 @@ void init() {
     grid[1][0] = addTwig;
 
     //Section for viewing twigs
-    tl.row = 17;
+    tl.row = 16;
     tl.col = 110;
     br.row = 50;
     br.col = 149;
@@ -92,18 +98,38 @@ void init() {
     };
     grid[1][1] = viewTwigs;
 
-    //Create the map and assign to the global variable 'layout'
-    Map map = {
-        .grid = grid
-    };
-    layout = map;
-
     //Populate twigs array
     loadTwigs();
 
     //Rendering
     getScreen();
+
+    //Display twigs
+    update_viewTwigs();
+
     render();
+}
+
+void update_viewTwigs() {
+    Buffer buf = grid[1][1];
+    bufferClear(buf);
+    int i;
+    int row = buf.tl.row;
+    for(i = twigs_start; i < twigs_size; i++) {
+        if(row > buf.br.row)
+            break;
+        char subject[100] = "subject: ";
+        strcat(subject, twigs[i].subject);
+        char message[150] = "message: ";
+        strcat(message, twigs[i].message);
+
+        char num = (char)(((int)'0') + i + 1);
+        buffer[row][buf.tl.col - 4] = num;
+        row = bufferPrint(row, buf, subject);
+        row += 1;
+        row = bufferPrint(row, buf, message);
+        row = bufferPrint(row, buf, "--------------------------------------");
+    }
 }
 
 void keypress() {
@@ -111,11 +137,18 @@ void keypress() {
     if((c = getkey()) != KEY_NOTHING) {
         if(c == QUIT)
             _quit = 1;
+        else if(c == KEY_UP) {
+            if(twigs_start < twigs_size)
+                twigs_start += 1;
+            update_viewTwigs();
+        } else if(c == KEY_DOWN) {
+            if(twigs_start > 0)
+                twigs_start -= 1;
+            update_viewTwigs();
+        }
         render();
     }
 }
-
-//update functions (for the screen)
 
 int main() {
     init();
