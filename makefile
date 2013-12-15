@@ -1,4 +1,5 @@
 CC = gcc -ggdb -g
+xterm = xterm -geom 151x51 -bg black -fg white -name shelter
 
 all: build build/keyboard.o build/xterm_control.o build/utils.o build/graphics.o build/shelter.o build/mystore
 	$(CC) build/keyboard.o build/xterm_control.o build/utils.o build/graphics.o build/shelter.o -o shelter
@@ -22,7 +23,7 @@ build/keyboard.o:
 	$(CC) -c lib/keyboard.c -o build/keyboard.o
 
 run: all
-	./shelter
+	$(xterm) ./shelter
 
 clean:
 	rm -rf build
