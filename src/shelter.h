@@ -12,9 +12,6 @@ typedef struct Twig Twig;
 //Initialization
 void init();
 
-//Update functions
-void update_viewTwigs();
-
 //Event detection
 void keypress();
 

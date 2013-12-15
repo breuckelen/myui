@@ -25,7 +25,12 @@ struct Buffer {
 };
 typedef struct Buffer Buffer;
 
+void init_screen();
+void fillBuffers();
 void render();
+void render_headings();
+void render_twigs();
+void render_screen();
 void getScreen();
-int bufferPrint(int row, Buffer buf, char *str);
+int bufferPrint(int row, Buffer buf, char *str, char *fg, char *bg);
 void bufferClear(Buffer buf);

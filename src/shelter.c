@@ -30,23 +30,6 @@ void init() {
     twigs_size = numTwigs();
     twigs_start = 0;
 
-    //Initializing points
-    Point tl = {
-        .row = 5,
-        .col = 65
-    };
-    Point br = {
-        .row = 8,
-        .col = 88
-    };
-
-    //Status bar
-    Buffer bar = {
-        .tl = tl,
-        .br = br
-    };
-    statusBar = bar;
-
     //Point of focus
     Point pof = {
         .row = 1,
@@ -54,82 +37,11 @@ void init() {
     };
     focus = pof;
 
-    //Section for editing twigs
-    tl.row = 15;
-    tl.col = 1;
-    br.row = 31;
-    br.col = 103;
-    Buffer editTwig = {
-        .tl = tl,
-        .br = br
-    };
-    grid[0][0] = editTwig;
-
-    //Section for searching twigs
-    tl.row = 15;
-    tl.col = 107;
-    br.row = 15;
-    br.col = 149;
-    Buffer searchTwigs = {
-        .tl = tl,
-        .br = br
-    };
-    grid[0][1] = searchTwigs;
-
-    //Section for adding twigs
-    tl.row = 34;
-    tl.col = 1;
-    br.row = 50;
-    br.col = 103;
-    Buffer addTwig = {
-        .tl = tl,
-        .br = br
-    };
-    grid[1][0] = addTwig;
-
-    //Section for viewing twigs
-    tl.row = 16;
-    tl.col = 110;
-    br.row = 50;
-    br.col = 149;
-    Buffer viewTwigs = {
-        .tl = tl,
-        .br = br
-    };
-    grid[1][1] = viewTwigs;
-
     //Populate twigs array
     loadTwigs();
 
-    //Rendering
-    getScreen();
-
-    //Display twigs
-    update_viewTwigs();
-
-    render();
-}
-
-void update_viewTwigs() {
-    Buffer buf = grid[1][1];
-    bufferClear(buf);
-    int i;
-    int row = buf.tl.row;
-    for(i = twigs_start; i < twigs_size; i++) {
-        if(row > buf.br.row)
-            break;
-        char subject[100] = "subject: ";
-        strcat(subject, twigs[i].subject);
-        char message[150] = "message: ";
-        strcat(message, twigs[i].message);
-
-        char num = (char)(((int)'0') + i + 1);
-        buffer[row][buf.tl.col - 4] = num;
-        row = bufferPrint(row, buf, subject);
-        row += 1;
-        row = bufferPrint(row, buf, message);
-        row = bufferPrint(row, buf, "--------------------------------------");
-    }
+    //Graphics init
+    init_screen();
 }
 
 void keypress() {
@@ -137,14 +49,36 @@ void keypress() {
     if((c = getkey()) != KEY_NOTHING) {
         if(c == QUIT)
             _quit = 1;
-        else if(c == KEY_UP) {
-            if(twigs_start < twigs_size)
-                twigs_start += 1;
-            update_viewTwigs();
+        else if(c == 'j') {
+            if(focus.row == 1 && focus.col == 1) {
+                if(twigs_start < twigs_size)
+                    twigs_start += 1;
+            }
+        } else if(c == 'k') {
+            if(focus.row == 1 && focus.col == 1) {
+                if(twigs_start > 0)
+                    twigs_start -= 1;
+            }
+        } else if(c == KEY_UP) {
+            if(focus.row > 0) {
+                grid[focus.row--][focus.col].heading.flag_bold = 0;
+                grid[focus.row][focus.col].heading.flag_bold = 1;
+            }
         } else if(c == KEY_DOWN) {
-            if(twigs_start > 0)
-                twigs_start -= 1;
-            update_viewTwigs();
+            if(focus.row < 1) {
+                grid[focus.row++][focus.col].heading.flag_bold = 0;
+                grid[focus.row][focus.col].heading.flag_bold = 1;
+            }
+        } else if(c == KEY_LEFT) {
+            if(focus.col > 0) {
+                grid[focus.row][focus.col--].heading.flag_bold = 0;
+                grid[focus.row][focus.col].heading.flag_bold = 1;
+            }
+        } else if(c == KEY_RIGHT) {
+            if(focus.col < 1) {
+                grid[focus.row][focus.col++].heading.flag_bold = 0;
+                grid[focus.row][focus.col].heading.flag_bold = 1;
+            }
         }
         render();
     }
