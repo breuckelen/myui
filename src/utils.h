@@ -14,3 +14,4 @@ int runCommand(int argc, char **argv);
 void loadTwigs();
 void addTwig(char *subject, char *message);
 void editTwig(int index, char *subject, char *message);
+void deleteTwig(int index);

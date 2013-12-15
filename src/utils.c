@@ -90,7 +90,6 @@ int runCommand(int argc, char **argv) {
             newargv[i + 1] = argv[i];
         }
         newargv[0] = "./build/mystore";
-        newargv[argc] = NULL;
         execvp(newargv[0], newargv);
          
         close(mypipe[1]);
@@ -113,7 +112,7 @@ int runCommand(int argc, char **argv) {
 }
 
 int numTwigs() {
-    char *cmd[1] = {"stat"};
+    char *cmd[2] = {"stat", NULL};
     runCommand(2, cmd);
     return atoi(dump[3].value);
 }
@@ -123,7 +122,7 @@ void loadTwigs() {
     for(i = 0; i < twigs_size; i++) {
         char num[5];
         sprintf(num, "%d", i + 1);
-        char *cmd[2] = {"display", num};
+        char *cmd[3] = {"display", num, NULL};
         runCommand(3, cmd);
         Twig twig = {
             .subject = dump[3].value,
@@ -139,10 +138,20 @@ void addTwig(char *subject, char *message) {
         .message = message
     };
     twigs[twigs_size++] = twig;
-    char *cmd[3] = {"add", subject, message};
+    char *cmd[4] = {"add", subject, message, NULL};
     runCommand(4, cmd);
 }
 
 void editTwig(int index, char *subject, char *message) {
+    char num[5];
+    sprintf(num, "%d", index + 1);
+    char *cmd[5] = {"edit", num, subject, message, NULL};
+    runCommand(5, cmd);
+}
 
+void deleteTwig(int index) {
+    char num[5];
+    sprintf(num, "%d", index + 1);
+    char *cmd[3] = {"delete", num, NULL};
+    runCommand(3, cmd);
 }

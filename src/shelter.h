@@ -2,6 +2,7 @@
 #define TRUE 1
 #define FALSE 0
 #define QUIT KEY_F1
+#define DEL 8
 
 struct Twig {
     char * subject;
