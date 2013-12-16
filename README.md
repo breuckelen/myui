@@ -11,6 +11,7 @@ A twitter clone in the shell.
 ## Controls
 
 ### Navigation
+* use F1 to quit
 * use the arrow keys to navigate between sections
 * you can tell which section you are in by which heading is highlighted
 * if no heading is highlighted, that means you are focused on the search section, which has not yet been implemented
