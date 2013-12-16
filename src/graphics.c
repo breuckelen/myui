@@ -188,6 +188,9 @@ void render_add(char c) {
     char *fg = XT_CH_RED,
          *bg = XT_BG_BLACK;
     focus_addTwig.row = bufferPrintChar(focus_addTwig.row, &(focus_addTwig.col), grid[1][0], c, fg, bg);
+    int col = focus_addTwig.col;
+    bufferPrintChar(focus_addTwig.row, &(focus_addTwig.col), grid[1][0], '|', fg, bg);
+    focus_addTwig.col = col;
 }
 
 void render() {
@@ -236,11 +239,11 @@ int bufferPrintChar(int row, int *col, Buffer buf, char c, char *fg, char *bg) {
 
     if(c == DEL) {
         if(*col == lb){
-            if(row == buf.tl.row)
-                return row;
+            buffer[row][*col] = ' ';
             *col = rb;
             row -= 1;
         }
+        buffer[row][*col] = ' ';
         buffer[row][--(*col)] = ' ';
         return row;
     }
