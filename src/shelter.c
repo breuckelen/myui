@@ -28,10 +28,10 @@ int flag_edit_subject;
 int flag_add_subject;
 
 //Buffers for saving typing
-char edit_subject[100];
-char add_subject[100];
-char edit_message[150];
-char add_message[150];
+char edit_subject[31];
+char add_subject[31];
+char edit_message[141];
+char add_message[141];
 
 //Whether to quit or not
 int _quit = 0;
@@ -98,18 +98,22 @@ void keypress() {
                     loadTwigs();
                     render_twigs();
                 }
+            } else if(c == KEY_ENTER) {
+                //Display the twig in the edit bar
             }
+        } else if(focus.row == 0 && focus.col == 0) {
+            //Do the same thing as below
         } else if(focus.row == 1 && focus.col == 0) {
-            xt_par2(XT_SET_ROW_COL_POS, focus_addTwig.row + 1, focus_addTwig.col + 1);
             if(c >= ' ' && c <= '~') {
-                if(flag_add_subject) {
+                if(flag_add_subject && strlen(add_subject) < sizeof(add_subject)) {
                     add_subject[strlen(add_subject) + 1] = '\0';
                     add_subject[strlen(add_subject)] = c;
-                } else {
+                    render_add(c);
+                } else if(!flag_add_subject && strlen(add_message) < sizeof(add_message)){
                     add_message[strlen(add_message) + 1] = '\0';
                     add_message[strlen(add_message)] = c;
+                    render_add(c);
                 }
-                render_add(c);
             } else if(c == KEY_ENTER) {
                 if(flag_add_subject) {
                     focus_addTwig.row = 39;
@@ -136,7 +140,6 @@ void keypress() {
                     add_message[strlen(add_message) - 1] = '\0';
                 render_add(c);
             }
-            xt_par2(XT_SET_ROW_COL_POS, focus_addTwig.row + 1, focus_addTwig.col + 1);
         }
 
         if(c == KEY_UP) {
