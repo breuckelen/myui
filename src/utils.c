@@ -5,10 +5,12 @@
 #include "utils.h"
 #include "shelter.h"
 
+//Twig vars
 Twig *twigs;
 int twigs_size;
 KeyValue *dump;
 
+//Read text from file input stream
 char * readInput(FILE *fp) {
     char * rawData = (char *)calloc(CHUNK_SIZE + 1, sizeof(char));
     char * temp = (char *)calloc(CHUNK_SIZE + 1, sizeof(char));
@@ -22,7 +24,7 @@ char * readInput(FILE *fp) {
     return rawData;
 }
 
-
+//Get the number of key val pairs in a string
 int numPairs(char *data) {
     int count = 0;
     while(*data) {
@@ -33,7 +35,7 @@ int numPairs(char *data) {
     return count / 2;
 }
 
-
+//Parse a string and return a key value pair array
 KeyValue * parseInput(char *data) {
     int size = numPairs(data);
     KeyValue * dict = (KeyValue *)calloc(size + 1, sizeof(KeyValue));
@@ -64,6 +66,7 @@ KeyValue * parseInput(char *data) {
     return copy;
 }
 
+//Run a command from mystore
 int runCommand(int argc, char **argv) {
     int pid, status;
     int mypipe[2];
@@ -111,12 +114,14 @@ int runCommand(int argc, char **argv) {
     }
 }
 
+//Get the number of twigs (command)
 int numTwigs() {
     char *cmd[2] = {"stat", NULL};
     runCommand(2, cmd);
     return atoi(dump[3].value);
 }
 
+//Load the twigs into an array (command)
 void loadTwigs() {
     int i;
     for(i = 0; i < twigs_size; i++) {
@@ -133,6 +138,7 @@ void loadTwigs() {
     }
 }
 
+//Add twig to the database (command)
 void addTwig(char *subject, char *message) {
     Twig twig = {
         .subject = subject,
@@ -143,6 +149,7 @@ void addTwig(char *subject, char *message) {
     runCommand(4, cmd);
 }
 
+//Edit twig in the database (command)
 void editTwig(int index, char *subject, char *message) {
     char num[5];
     sprintf(num, "%d", index + 1);
@@ -150,6 +157,7 @@ void editTwig(int index, char *subject, char *message) {
     runCommand(5, cmd);
 }
 
+//Delete a twig (command)
 void deleteTwig(int index) {
     char num[5];
     sprintf(num, "%d", index + 1);
