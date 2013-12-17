@@ -125,6 +125,7 @@ void loadTwigs() {
         char *cmd[3] = {"display", num, NULL};
         runCommand(3, cmd);
         Twig twig = {
+            .date = dump[2].value,
             .subject = dump[3].value,
             .message = dump[4].value
         };

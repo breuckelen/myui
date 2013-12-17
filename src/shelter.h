@@ -5,6 +5,7 @@
 #define DEL 8
 
 struct Twig {
+    char * date;
     char * subject;
     char * message;
 };

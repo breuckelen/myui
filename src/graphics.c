@@ -6,8 +6,8 @@
 #include "../lib/xterm_control.h"
 
 extern char buffer[SCREEN_HEIGHT][SCREEN_WIDTH];
-char colorBuffer[SCREEN_HEIGHT][SCREEN_WIDTH][30];
-char styleBuffer[SCREEN_HEIGHT][SCREEN_WIDTH][30];
+char colorBuffer[SCREEN_HEIGHT][SCREEN_WIDTH][40];
+char styleBuffer[SCREEN_HEIGHT][SCREEN_WIDTH][40];
 
 Twig *twigs;
 int twigs_size;
@@ -175,6 +175,7 @@ void render_twigs() {
 
         row = bufferPrintStr(row, col, buf, subject, fg, bg);
         row = bufferPrintStr(++row, col, buf, message, fg, bg);
+        row = bufferPrintStr(++row, col, buf, twigs[i].date, fg, bg);
         row = bufferPrintStr(row, col, buf, "--------------------------------------", fg, bg);
     }
 }
@@ -220,6 +221,8 @@ void getScreen() {
 int bufferPrintStr(int row, int col, Buffer buf, char *str, char *fg, char *bg) {
     int lb = buf.tl.col,
         rb = buf.br.col;
+    if(row >= buf.br.row)
+        return row + 1;
     while(*str) {
         if(col >= rb) {
             col = lb;
