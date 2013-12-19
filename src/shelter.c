@@ -178,4 +178,5 @@ int main() {
     while(!_quit) {
         keypress();
     }
+    getkey_terminate();
 }

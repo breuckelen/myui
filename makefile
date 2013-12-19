@@ -1,4 +1,4 @@
-CC = gcc -ggdb -g
+CC = gcc -ggdb -g -Wall
 xterm = xterm -geom 151x51 -bg black -fg white -name shelter
 
 all: build build/keyboard.o build/xterm_control.o build/utils.o build/graphics.o build/shelter.o build/mystore

@@ -121,7 +121,7 @@ void init_screen() {
 
 //Initialize the color and style buffers with default values
 void fillBuffers() {
-    int i, j, k;
+    int i, j;
     for(i = 0; i < SCREEN_HEIGHT; i++) {
         for(j = 0; j < SCREEN_WIDTH; j++) {
             colorBuffer[i][j] = XT_CH_NORMAL;
@@ -212,6 +212,7 @@ void render_add(char c) {
 //Render the buffer with corresponding colors and styles
 void render() {
     int row, col;
+    xt_par2(XT_SET_ROW_COL_POS, 0, 0);
     for(row = 0; row < SCREEN_HEIGHT; row++) {
         for(col = 0; col < SCREEN_WIDTH; col++) {
             xt_par2(XT_SET_ROW_COL_POS, row+1, col+1);
@@ -220,6 +221,7 @@ void render() {
             printf("%c", buffer[row][col]);
         }
     }
+    xt_par2(XT_SET_ROW_COL_POS, 0, 0);
 }
 
 //Load the screen from the layout file
@@ -290,7 +292,7 @@ void bufferClear(Buffer buf) {
     while(row <= buf.br.row) {
         if(col >= buf.br.col){
             col = buf.tl.col;
-            if(buf.heading.text == "VIEW TWIGS")
+            if(focus.row == 1 && focus.col == 1)
                 buffer[row][buf.tl.col - 4] = ' ';
             row++;
         }

@@ -100,7 +100,6 @@ int runCommand(int argc, char **argv) {
     } else {
         FILE *fp;
         char *buffer;
-        int n;
          
         close(mypipe[1]);
         wait(&status);
