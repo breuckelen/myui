@@ -121,7 +121,7 @@ void init_screen() {
 
 //Initialize the color and style buffers with default values
 void fillBuffers() {
-    int i, j;
+    int i, j, k;
     for(i = 0; i < SCREEN_HEIGHT; i++) {
         for(j = 0; j < SCREEN_WIDTH; j++) {
             colorBuffer[i][j] = XT_CH_NORMAL;
@@ -222,6 +222,7 @@ void render() {
             printf("%c", buffer[row][col]);
         }
     }
+    //xt_par2(XT_SET_ROW_COL_POS, 0, 0);
 }
 
 //Load the screen from the layout file
