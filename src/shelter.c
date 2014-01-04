@@ -55,18 +55,10 @@ void init() {
     pof.col = 10;
     focus_editTwig = pof;
 
-    //pof.row = 21;
-    //pof.col = 7;
-    //focus_editTwig_message = pof;
-
     //Point of focus for adding
     pof.row = 34;
     pof.col = 10;
     focus_addTwig = pof;
-
-    //pof.row = 40;
-    //pof.col = 7;
-    //focus_addTwig_message = pof;
 
     //Flags
     flag_edit_subject = 1;
@@ -76,6 +68,107 @@ void init() {
     init_screen();
 }
 
+void keypress_viewTwigs(char c) {
+    if(c == 'j') {
+        if(twigs_start < twigs_size)
+            twigs_start += 1;
+        render_twigs();
+    } else if(c == 'k') {
+        if(twigs_start > 0)
+            twigs_start -= 1;
+        render_twigs();
+    } else if(c == DEL) {
+        if(twigs_size > 0) {
+            deleteTwig(twigs_start);
+            twigs_size = numTwigs();
+            loadTwigs();
+            render_twigs();
+        }
+    } else if(c == KEY_ENTER) {
+    }
+}
+
+void keypress_editTwig(char c) {
+    if(c >= ' ' && c <= '~') {
+        if(flag_edit_subject && strlen(edit_subject) < sizeof(edit_subject)) {
+            edit_subject[strlen(edit_subject) + 1] = '\0';
+            edit_subject[strlen(edit_subject)] = c;
+            render_edit(c);
+        } else if(!flag_edit_subject && strlen(edit_message) < sizeof(edit_message)){
+            edit_message[strlen(edit_message) + 1] = '\0';
+            edit_message[strlen(edit_message)] = c;
+            render_edit(c);
+        }
+    } else if(c == KEY_ENTER) {
+        if(flag_edit_subject) {
+            focus_editTwig.row = 20;
+            focus_editTwig.col = 10;
+            flag_edit_subject = 0;
+        } else {
+            editTwig(twigs_start, edit_subject, edit_message);
+            edit_subject[0] = '\0';
+            edit_message[0] = '\0';
+            bufferClear(grid[0][0]);
+
+            flag_edit_subject = 1;
+            focus_editTwig.row = 15;
+            focus_editTwig.col = 10;
+
+            loadTwigs();
+            render_twigs();
+        }
+    } else if(c == DEL) {
+        if(flag_edit_subject && strlen(edit_subject) > 0) {
+            edit_subject[strlen(edit_subject) - 1] = '\0';
+            render_edit(c);
+        } else if(!flag_edit_subject && strlen(edit_message) > 0) {
+            edit_message[strlen(add_message) - 1] = '\0';
+            render_edit(c);
+        }
+    }
+}
+
+void keypress_addTwig(char c) {
+    if(c >= ' ' && c <= '~') {
+        if(flag_add_subject && strlen(add_subject) < sizeof(add_subject)) {
+            add_subject[strlen(add_subject) + 1] = '\0';
+            add_subject[strlen(add_subject)] = c;
+            render_add(c);
+        } else if(!flag_add_subject && strlen(add_message) < sizeof(add_message)){
+            add_message[strlen(add_message) + 1] = '\0';
+            add_message[strlen(add_message)] = c;
+            render_add(c);
+        }
+    } else if(c == KEY_ENTER) {
+        if(flag_add_subject) {
+            focus_addTwig.row = 39;
+            focus_addTwig.col = 10;
+            flag_add_subject = 0;
+        } else {
+            addTwig(add_subject, add_message);
+            add_subject[0] = '\0';
+            add_message[0] = '\0';
+            bufferClear(grid[1][0]);
+
+            flag_add_subject = 1;
+            focus_addTwig.row = 34;
+            focus_addTwig.col = 10;
+
+            twigs_size = numTwigs();
+            loadTwigs();
+            render_twigs();
+        }
+    } else if(c == DEL) {
+        if(flag_add_subject && strlen(add_subject) > 0) {
+            add_subject[strlen(add_subject) - 1] = '\0';
+            render_add(c);
+        } else if(!flag_add_subject && strlen(add_message) > 0) {
+            add_message[strlen(add_message) - 1] = '\0';
+            render_add(c);
+        }
+    }
+}
+
 void keypress() {
     char c;
     if((c = getkey()) != KEY_NOTHING) {
@@ -83,65 +176,11 @@ void keypress() {
             _quit = 1;
 
         if(focus.row == 1 && focus.col == 1) {
-            if(c == 'j') {
-                if(twigs_start < twigs_size)
-                    twigs_start += 1;
-                render_twigs();
-            } else if(c == 'k') {
-                if(twigs_start > 0)
-                    twigs_start -= 1;
-                render_twigs();
-            } else if(c == DEL) {
-                if(twigs_size > 0) {
-                    deleteTwig(twigs_start);
-                    twigs_size = numTwigs();
-                    loadTwigs();
-                    render_twigs();
-                }
-            } else if(c == KEY_ENTER) {
-                //Display the twig in the edit bar
-            }
+            keypress_viewTwigs(c);
         } else if(focus.row == 0 && focus.col == 0) {
-            //Do the same thing as below
+            keypress_editTwig(c);
         } else if(focus.row == 1 && focus.col == 0) {
-            if(c >= ' ' && c <= '~') {
-                if(flag_add_subject && strlen(add_subject) < sizeof(add_subject)) {
-                    add_subject[strlen(add_subject) + 1] = '\0';
-                    add_subject[strlen(add_subject)] = c;
-                    render_add(c);
-                } else if(!flag_add_subject && strlen(add_message) < sizeof(add_message)){
-                    add_message[strlen(add_message) + 1] = '\0';
-                    add_message[strlen(add_message)] = c;
-                    render_add(c);
-                }
-            } else if(c == KEY_ENTER) {
-                if(flag_add_subject) {
-                    focus_addTwig.row = 39;
-                    focus_addTwig.col = 10;
-                    flag_add_subject = 0;
-                } else {
-                    addTwig(add_subject, add_message);
-                    add_subject[0] = '\0';
-                    add_message[0] = '\0';
-                    bufferClear(grid[1][0]);
-
-                    flag_add_subject = 1;
-                    focus_addTwig.row = 34;
-                    focus_addTwig.col = 10;
-
-                    twigs_size = numTwigs();
-                    loadTwigs();
-                    render_twigs();
-                }
-            } else if(c == DEL) {
-                if(flag_add_subject && strlen(add_subject) > 0) {
-                    add_subject[strlen(add_subject) - 1] = '\0';
-                    render_add(c);
-                } else if(!flag_add_subject && strlen(add_message) > 0) {
-                    add_message[strlen(add_message) - 1] = '\0';
-                    render_add(c);
-                }
-            }
+            keypress_addTwig(c);
         }
 
         if(c == KEY_UP) {

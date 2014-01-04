@@ -194,7 +194,14 @@ void render_twigs() {
 
 //Render the editing section
 void render_edit(char c) {
+    char *fg = XT_CH_RED,
+         *bg = XT_BG_BLACK;
+    focus_editTwig.row = bufferPrintChar(focus_editTwig.row, &(focus_editTwig.col), grid[0][0], c, fg, bg);
 
+    int col = focus_editTwig.col;
+    //Render '|' delimiting the cursor
+    bufferPrintChar(focus_editTwig.row, &(focus_editTwig.col), grid[0][0], '|', fg, bg);
+    focus_editTwig.col = col;
 }
 
 //REnder the adding section

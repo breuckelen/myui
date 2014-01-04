@@ -15,6 +15,9 @@ typedef struct Twig Twig;
 void init();
 
 //Event detection
+void keypress_viewTwigs(char c);
+void keypress_editTwig(char c);
+void keypress_addTwig(char c);
 void keypress();
 
 //Main loop
