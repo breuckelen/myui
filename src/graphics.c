@@ -21,6 +21,7 @@ extern Buffer statusBar;
 Point focus;
 Point focus_editTwig;
 Point focus_addTwig;
+Point focus_searchTwigs;
 
 //Init
 void init_screen() {
@@ -204,7 +205,7 @@ void render_edit(char c) {
     focus_editTwig.col = col;
 }
 
-//REnder the adding section
+//Render the adding section
 void render_add(char c) {
     char *fg = XT_CH_RED,
          *bg = XT_BG_BLACK;
@@ -214,6 +215,14 @@ void render_add(char c) {
     //Render '|' delimiting the cursor
     bufferPrintChar(focus_addTwig.row, &(focus_addTwig.col), grid[1][0], '|', fg, bg);
     focus_addTwig.col = col;
+}
+
+//Render the adding section
+void render_search(char c) {
+    char *fg = XT_CH_RED,
+         *bg = XT_BG_BLACK;
+    
+    focus_searchTwigs.row = bufferPrintChar(focus_searchTwigs.row, &(focus_searchTwigs.col), grid[0][1], c, fg, bg);
 }
 
 //Render the buffer with corresponding colors and styles

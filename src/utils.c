@@ -129,6 +129,7 @@ void loadTwigs() {
         char *cmd[3] = {"display", num, NULL};
         runCommand(3, cmd);
         Twig twig = {
+            .index = atoi(dump[1].value) - 1,
             .date = dump[2].value,
             .subject = dump[3].value,
             .message = dump[4].value
@@ -139,11 +140,6 @@ void loadTwigs() {
 
 //Add twig to the database (command)
 void addTwig(char *subject, char *message) {
-    Twig twig = {
-        .subject = subject,
-        .message = message
-    };
-    twigs[twigs_size++] = twig;
     char *cmd[4] = {"add", subject, message, NULL};
     runCommand(4, cmd);
 }
