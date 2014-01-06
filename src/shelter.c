@@ -53,12 +53,12 @@ void init() {
     focus = pof;
 
     //Point of focus for editing
-    pof.row = 15;
+    pof.row = 17;
     pof.col = 10;
     focus_editTwig = pof;
 
     //Point of focus for adding
-    pof.row = 34;
+    pof.row = 35;
     pof.col = 10;
     focus_addTwig = pof;
 
@@ -84,7 +84,7 @@ void fillEdit() {
         bufferClear(grid[0][0]);
 
         flag_edit_subject = 1;
-        focus_editTwig.row = 15;
+        focus_editTwig.row = 17;
         focus_editTwig.col = 10;
         for(i = 0; i < strlen(twig.subject); i++) {
             keypress_editTwig(twig.subject[i]);
@@ -96,8 +96,8 @@ void fillEdit() {
     }
 }
 
-void filterTwigs(char *match) {
-    if(!*match) {
+void filterTwigs(char match[]) {
+    if(!match[0]) {
         twigs_size = numTwigs();
         twigs_start = 0;
         loadTwigs();
@@ -127,7 +127,7 @@ void keypress_editTwig(char c) {
         }
     } else if(c == KEY_ENTER) {
         if(flag_edit_subject) {
-            focus_editTwig.row = 20;
+            focus_editTwig.row = 22;
             focus_editTwig.col = 10 + strlen(edit_message);
             flag_edit_subject = 0;
         } else {
@@ -137,9 +137,10 @@ void keypress_editTwig(char c) {
             bufferClear(grid[0][0]);
 
             flag_edit_subject = 1;
-            focus_editTwig.row = 15;
+            focus_editTwig.row = 17;
             focus_editTwig.col = 10;
 
+            twigs_size = numTwigs();
             loadTwigs();
             render_twigs();
             keypress(KEY_RIGHT);
@@ -155,11 +156,11 @@ void keypress_editTwig(char c) {
         }
     } else if(c == KEY_F3) {
         if(flag_edit_subject) {
-            focus_editTwig.row = 20;
+            focus_editTwig.row = 22;
             focus_editTwig.col = 10 + strlen(edit_message);
             flag_edit_subject = 0;
         } else {
-            focus_editTwig.row = 15;
+            focus_editTwig.row = 17;
             focus_editTwig.col = 10 + strlen(edit_subject);
             flag_edit_subject = 1;
         }
@@ -186,7 +187,6 @@ void keypress_searchTwigs(char c) {
         bufferClear(grid[0][1]);
         search_string[0] = '\0';
         render_twigs();
-        keypress(KEY_DOWN);
     }
 }
 
@@ -203,7 +203,7 @@ void keypress_addTwig(char c) {
         }
     } else if(c == KEY_ENTER) {
         if(flag_add_subject) {
-            focus_addTwig.row = 39;
+            focus_addTwig.row = 40;
             focus_addTwig.col = 10 + strlen(add_message);
             flag_add_subject = 0;
         } else {
@@ -213,7 +213,7 @@ void keypress_addTwig(char c) {
             bufferClear(grid[1][0]);
 
             flag_add_subject = 1;
-            focus_addTwig.row = 34;
+            focus_addTwig.row = 35;
             focus_addTwig.col = 10;
 
             twigs_size = numTwigs();
@@ -230,11 +230,11 @@ void keypress_addTwig(char c) {
         }
     } else if(c == KEY_F3) {
         if(flag_add_subject) {
-            focus_addTwig.row = 39;
+            focus_addTwig.row = 40;
             focus_addTwig.col = 10 + strlen(add_message);
             flag_add_subject = 0;
         } else {
-            focus_addTwig.row = 34;
+            focus_addTwig.row = 35;
             focus_addTwig.col = 10 + strlen(add_subject);
             flag_add_subject = 1;
         }

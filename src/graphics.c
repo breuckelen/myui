@@ -44,7 +44,7 @@ void init_screen() {
 
     //Section for editing twigs
     Point hp = {
-        .row = 12,
+        .row = 14,
         .col = 48
     };
     //Create and initialize heading for sections
@@ -54,9 +54,9 @@ void init_screen() {
         .color = XT_CH_MAGENTA,
         .flag_bold = 0
     };
-    tl.row = 15;
+    tl.row = 17;
     tl.col = 10;
-    br.row = 30;
+    br.row = 32;
     br.col = 100;
     Buffer editTwig = {
         .heading = heading,
@@ -80,13 +80,13 @@ void init_screen() {
     grid[0][1] = searchTwigs;
 
     //Section for adding twigs
-    hp.row = 31;
+    hp.row = 32;
     hp.col = 46;
     heading.start = hp;
     heading.text = "ADD A NEW TWIG";
-    tl.row = 34;
+    tl.row = 35;
     tl.col = 10;
-    br.row = 50;
+    br.row = 51;
     br.col = 100;
     Buffer addTwig = {
         .heading = heading,
@@ -113,7 +113,7 @@ void init_screen() {
     grid[1][1] = viewTwigs;
 
     //Rendering
-    loadScreen();
+    loadScreen(LAYOUT_FILE);
     fillBuffers();
     render_twigs();
     render_headings();
@@ -240,18 +240,6 @@ void render() {
     }
 }
 
-//Load the screen from the layout file
-void loadScreen() {
-    FILE *fp = fopen(LAYOUT_FILE, "r");
-    int row = 0;
-    for(row = 0; row < SCREEN_HEIGHT; row++) {
-        if(!fgets(buffer[row], SCREEN_WIDTH, fp))
-            break;
-        printf("%s", buffer[row]);
-    }
-    fclose(fp);
-}
-
 //Print within left and right boundaries
 int bufferPrintStr(int row, int col, Buffer buf, char *str, char *fg, char *bg) {
     int lb = buf.tl.col,
@@ -315,4 +303,16 @@ void bufferClear(Buffer buf) {
 
         buffer[row][col++] = ' ';
     }
+}
+
+//Load the screen from the layout file
+void loadScreen(char *filename) {
+    FILE *fp = fopen(filename, "r");
+    int row = 0;
+    for(row = 0; row < SCREEN_HEIGHT; row++) {
+        if(!fgets(buffer[row], SCREEN_WIDTH, fp))
+            break;
+        printf("%s", buffer[row]);
+    }
+    fclose(fp);
 }

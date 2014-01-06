@@ -37,12 +37,12 @@ void render_add(char c);
 void render_search(char c);
 void render();
 
-//loading
-void loadScreen();
-
 //printing utils
 int bufferPrintStr(int row, int col, Buffer buf, char *str, char *fg, char *bg);
 int bufferPrintChar(int row, int *col, Buffer buf, char c, char *fg, char *bg);
 
 //clearing
 void bufferClear(Buffer buf);
+
+//loading
+void loadScreen(char *filename);
