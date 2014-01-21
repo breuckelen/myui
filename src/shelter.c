@@ -41,8 +41,9 @@ int _quit = 0;
 void init() {
     //Initializing twig array
     twigs_size = numTwigs();
+    printf("\n%d", twigs_size);
     twigs_start = 0;
-    twigs = (Twig *)malloc(twigs_size * sizeof(Twig));
+    twigs = (Twig *)malloc(1000 * sizeof(Twig));
     loadTwigs();
 
     //Point of focus for screen
@@ -76,7 +77,7 @@ void init() {
 }
 
 void fillEdit() {
-    if(twigs_size > 0 & twigs_start < twigs_size) {
+    if(twigs_size > 0 && twigs_start < twigs_size) {
         int i;
         Twig twig = twigs[twigs_start];
         edit_subject[0] = '\0';

@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include "utils.h"
 #include "shelter.h"
 
@@ -67,56 +70,60 @@ KeyValue * parseInput(char *data) {
 }
 
 //Run a command from mystore
-int runCommand(int argc, char **argv) {
-    int pid, status;
-    int mypipe[2];
-     
-     //create the pipe
-    if (pipe(mypipe) == -1) {
-        perror("Error creating the pipe\n");
-        return 1;
+int runCommand(int argc, char *argv[]) {
+    char *fifo_write = "/tmp/mystore_server.dat";
+    char fifo_read[40];
+    char send_message[100], read_message[500];
+    int fd_write, fd_read, n_read;
+
+    char *message = (char *)calloc(1, sizeof(char));
+    message[0] = ' ';
+    int i;
+    for(i = 0; i < argc; i++) asprintf(&message, "%s %s", message, argv[i]);
+
+    // create and open the client's own FIFO for reading
+    sprintf(fifo_read, "/tmp/mystore_client_%d.dat", getpid());
+    if (mkfifo(fifo_read, 0666) != 0) {
+            perror("client mkfifo failed, returns: ");
+            return -1;
     }
-               
-     //fork
-    pid = fork();
-    if(pid == -1) {
-        perror("Error forking\n");
-        exit(1);
-    } else if(pid == 0) {
-        char ** newargv = (char **)calloc(argc + 1, sizeof(char *));
-        int i;
-         
-        close(mypipe[0]);
-        dup2(mypipe[1], STDOUT_FILENO);
-         
-        for(i = 0; i < argc; i++) {
-            newargv[i + 1] = argv[i];
-        }
-        newargv[0] = "./build/mystore";
-        execvp(newargv[0], newargv);
-         
-        close(mypipe[1]);
-        exit(0);
-    } else {
-        FILE *fp;
-        char *buffer;
-         
-        close(mypipe[1]);
-        wait(&status);
-         
-        if ((fp = fdopen(mypipe[0], "r")) == NULL) {
-            perror("Error opening file descriptor\n");
-        }
-        buffer = readInput(fp);
-        dump = parseInput(buffer);
-        close(mypipe[0]);
+    
+    // open the server's FIFO for writing
+    if ((fd_write = open(fifo_write, O_WRONLY)) < 0) {
+            perror("Cannot open FIFO to server: ");
+            return -1;
     }
+    // compose and send write message to server's FIFO
+    sprintf(send_message, "%s %s", fifo_read, message);
+    free(message);
+    write(fd_write, send_message, strlen(send_message));
+    close(fd_write);
+    
+    // open the client's FIFO for reading
+    if ((fd_read = open(fifo_read, O_RDONLY)) < 0) {
+            perror("Cannot open FIFO to read from server: ");
+            return -1;
+    }
+    
+    // read server's reply in client's FIFO
+    n_read = read(fd_read, read_message, 500);
+    if (n_read >= 0) read_message[n_read] = '\0';
+    
+    // close and delete client's FIFO
+    char *data;
+    asprintf(&data, read_message);
+    dump = parseInput(data);
+
+    close(fd_read);
+    unlink(fifo_read);
+
+    return 0;
 }
 
 //Get the number of twigs (command)
 int numTwigs() {
-    char *cmd[2] = {"stat", NULL};
-    runCommand(2, cmd);
+    char *cmd[1] = {"stat"};
+    runCommand(1, cmd);
     return atoi(dump[3].value);
 }
 
@@ -126,8 +133,8 @@ void loadTwigs() {
     for(i = 0; i < twigs_size; i++) {
         char num[5];
         sprintf(num, "%d", i + 1);
-        char *cmd[3] = {"display", num, NULL};
-        runCommand(3, cmd);
+        char *cmd[2] = {"display", num};
+        runCommand(2, cmd);
         Twig twig = {
             .index = atoi(dump[1].value) - 1,
             .date = dump[2].value,
@@ -140,22 +147,22 @@ void loadTwigs() {
 
 //Add twig to the database (command)
 void addTwig(char *subject, char *message) {
-    char *cmd[4] = {"add", subject, message, NULL};
-    runCommand(4, cmd);
+    char *cmd[3] = {"add", subject, message};
+    runCommand(3, cmd);
 }
 
 //Edit twig in the database (command)
 void editTwig(int index, char *subject, char *message) {
     char num[5];
     sprintf(num, "%d", index + 1);
-    char *cmd[5] = {"edit", num, subject, message, NULL};
-    runCommand(5, cmd);
+    char *cmd[4] = {"edit", num, subject, message};
+    runCommand(4, cmd);
 }
 
 //Delete a twig (command)
 void deleteTwig(int index) {
     char num[5];
     sprintf(num, "%d", index + 1);
-    char *cmd[3] = {"delete", num, NULL};
-    runCommand(3, cmd);
+    char *cmd[2] = {"delete", num};
+    runCommand(2, cmd);
 }

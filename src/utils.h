@@ -13,9 +13,10 @@ int numPairs(char *data);
 KeyValue * parseInput(char *data);
 
 //processes
-int runCommand(int argc, char **argv);
+int runCommand(int argc, char *argv[]);
 
 //commands
+int numTwigs();
 void loadTwigs();
 void addTwig(char *subject, char *message);
 void editTwig(int index, char *subject, char *message);
