@@ -71,53 +71,66 @@ KeyValue * parseInput(char *data) {
 
 //Run a command from mystore
 int runCommand(int argc, char *argv[]) {
-    char *fifo_write = "/tmp/mystore_server.dat";
-    char fifo_read[40];
-    char send_message[100], read_message[500];
-    int fd_write, fd_read, n_read;
+    char send_buffer[MAX_BUF], receive_buffer[MAX_BUF];
+    int portno;
 
     char *message = (char *)calloc(1, sizeof(char));
     message[0] = ' ';
     int i;
     for(i = 0; i < argc; i++) asprintf(&message, "%s %s", message, argv[i]);
+    asprintf(&message, "%s", message);
+    char *new_argv[] = {message};
 
-    // create and open the client's own FIFO for reading
-    sprintf(fifo_read, "/tmp/mystore_client_%d.dat", getpid());
-    if (mkfifo(fifo_read, 0666) != 0) {
-            perror("client mkfifo failed, returns: ");
-            return -1;
+    portno = 51000;
+    gather_message(send_buffer, new_argv, 1, MAX_BUF);
+    receive_buffer[0] = '\0';
+
+    if (send_to_server("localhost", portno, send_buffer, receive_buffer, MAX_BUF) < 0) {
+        printf("Client: ERROR in send_to_server\n");
+        return -1;
     }
-    
-    // open the server's FIFO for writing
-    if ((fd_write = open(fifo_write, O_WRONLY)) < 0) {
-            perror("Cannot open FIFO to server: ");
-            return -1;
-    }
-    // compose and send write message to server's FIFO
-    sprintf(send_message, "%s %s", fifo_read, message);
-    free(message);
-    write(fd_write, send_message, strlen(send_message));
-    close(fd_write);
-    
-    // open the client's FIFO for reading
-    if ((fd_read = open(fifo_read, O_RDONLY)) < 0) {
-            perror("Cannot open FIFO to read from server: ");
-            return -1;
-    }
-    
-    // read server's reply in client's FIFO
-    n_read = read(fd_read, read_message, 500);
-    if (n_read >= 0) read_message[n_read] = '\0';
-    
-    // close and delete client's FIFO
+
     char *data;
-    asprintf(&data, read_message);
+    asprintf(&data, receive_buffer);
     dump = parseInput(data);
 
-    close(fd_read);
-    unlink(fifo_read);
-
     return 0;
+}
+
+// -------------------------------------- gather_message -------------------------------
+void gather_message(char *buffer, char **args, int nargs, int max_buf) {
+    int i;
+    int n = 0;
+    char *sout = buffer;
+    char *sin, c;
+
+    for (i = 0; i < nargs; ++i) {
+        sin = args[i];
+        while ((c = *sin++) && n < max_buf - 1) {
+            if (c != '\\') {
+                *sout++ = c;
+                ++n;
+            }
+            else {
+                c = *sin;
+                if (c == '\\' || c == 'n' || c == 'r' || c == 't') {
+                    if (c == '\\') *sout++ = '\\';
+                    else if (c == 'n') *sout++ = '\n';
+                    else if (c == 't') *sout++ = '\t';
+                    else if (c == 'r') *sout++ = '\r';
+                    sin++;
+                    n++;
+                }
+                else {
+                    *sout++ = '\\';
+                    *sout++ = c;
+                    ++sin;
+                    n += 2;
+                }
+            }
+        }
+    }
+    *sout = '\0';
 }
 
 //Get the number of twigs (command)
@@ -148,13 +161,8 @@ void loadTwigs() {
 //Add twig to the database (command)
 void addTwig(char *subject, char *message) {
     char *new_subject, *new_message;
-    if (strchr(subject, ' ') || strchr(message, ' ')) {
-        asprintf(&new_subject, "\"%s\"", subject);
-        asprintf(&new_message, "\"%s\"", message);
-    } else {
-        asprintf(&new_subject, "\"%s\"", subject);
-        asprintf(&new_message, "\"%s\"", message);
-    }
+    asprintf(&new_subject, "\"%s\"", subject);
+    asprintf(&new_message, "\"%s\"", message);
     char *cmd[3] = {"add", new_subject, new_message};
     runCommand(3, cmd);
 }
@@ -162,15 +170,10 @@ void addTwig(char *subject, char *message) {
 //Edit twig in the database (command)
 void editTwig(int index, char *subject, char *message) {
     char num[5];
-    sprintf(num, "%d", index + 1);
     char *new_subject, *new_message;
-    if (strchr(subject, ' ') || strchr(message, ' ')) {
-        asprintf(&new_subject, "\"%s\"", subject);
-        asprintf(&new_message, "\"%s\"", message);
-    } else {
-        new_subject = subject;
-        new_message = message;
-    }
+    sprintf(num, "%d", index + 1);
+    asprintf(&new_subject, "\"%s\"", subject);
+    asprintf(&new_message, "\"%s\"", message);
     char *cmd[4] = {"edit", num, new_subject, new_message};
     runCommand(4, cmd);
 }

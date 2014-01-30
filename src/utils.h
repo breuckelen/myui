@@ -1,5 +1,6 @@
 #pragma once
 #define CHUNK_SIZE 50
+#define MAX_BUF	10000
 
 struct KeyValue {
     char * key;
@@ -14,6 +15,7 @@ KeyValue * parseInput(char *data);
 
 //processes
 int runCommand(int argc, char *argv[]);
+void gather_message(char *buffer, char **args, int nargs, int max_buf);
 
 //commands
 int numTwigs();

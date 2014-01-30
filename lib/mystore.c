@@ -10,21 +10,29 @@
 #define version "0.90"
 #define author "PBrooks"
 
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <signal.h>
 #include <time.h>
 
-char *Usage = "Usage:\tmystore add \"subject\" \"body\"\n\
-               mystore stat\n\
-               mystore display {item-no}\n\
-               mystore delete {item-no}\n\
-               mystore edit {item-no} \"subject\" \"body\"\n";
+#define PORT_NUMBER		51000		// the server's default port number
 
+#define TRUE	1
+#define FALSE	0
+
+// Messages sent to client:
+#define HUH			"Huh?\n"
+#define EMPTY_MSG	"Empty message received\n"
+#define QUITTING	"Server agrees to quit\n"
+
+//Mystore constants
 #define NOTHING		0
 #define ADD			1
 #define STAT		2
@@ -32,8 +40,13 @@ char *Usage = "Usage:\tmystore add \"subject\" \"body\"\n\
 #define DELETE		4
 #define EDIT		5
 
-#define TRUE	1
-#define FALSE	0
+int portno = PORT_NUMBER;
+
+char *Usage = "Usage:\tmystore add \"subject\" \"body\"\n\
+               mystore stat\n\
+               mystore display {item-no}\n\
+               mystore delete {item-no}\n\
+               mystore edit {item-no} \"subject\" \"body\"\n";
 
 // Command line arguments processed:
 int command = NOTHING;
@@ -43,7 +56,12 @@ char *fields[5];
 int item_start = -1;
 int item_end = -1;
 
-// Prototypes:
+// Prototypes for server functions
+void server_start();
+void server_stop();
+int send_to_server(char *server_name, int portno, char *send_buffer, char *receive_buffer, int max_buf);
+
+// Prototypes for mystore functions
 int handleArgs(char *message);
 int parseArgs(char *message);
 int isPositive(char *s);
@@ -52,7 +70,6 @@ int add(char *subject, char *body);
 void status(void);
 char *rstrip(char *s);
 void list(void);
-static void the_handler(int sig);
 
 // this describes the data item on disk
 struct data {
@@ -75,65 +92,99 @@ struct carrier *last = NULL;
 int rewrite = FALSE;		// if data changes then rewrite
 char errmsg[100] = "";
 
-int fd_read, fd_write, fd_out;
-char *fifo_read = "/tmp/mystore_server.dat";
+int current_sockfd;
 
-// ---------------------------------- main() --------------------------------
-int main(int argc, char **argv) {
-    int how_much;
-    char input[BUFSIZ];
-
-    if (argc == 2) fifo_read = argv[1];
-
-    printf("Capitalization FIFO server\nSend requests to: %s\n", fifo_read);
-    printf("Requests:\nfifo_client {string}\necho print {string} >%s\necho return {client-fifo_filename} {string} >%s\n", fifo_read, fifo_read);
-    printf("\nTerminate using \"kill -10 {pid of fifo_server}\"\n");
-    printf("Can also be terminated with ^C\n");
-
-    if (signal(SIGINT, the_handler) == SIG_ERR) {
-        perror("Cannot set up signal handler on SIGINT...");
-        return -1;
-    }
-    if (signal(SIGUSR1, the_handler) == SIG_ERR) {
-        perror("Cannot set up signal handler on SIGUSR1...");
-        return -1;
+// ------------------------------------ main ------------------------------------------------------------
+int main(int argc, char *argv[]) {
+    if (strcmp(argv[argc-1],"start") != 0 && strcmp(argv[argc-1],"stop") != 0) {		// print help
+        printf("Creates or controls a server on this computer at port %d\n",PORT_NUMBER);
+        printf("Usage: sockets_server {start | stop}\n   or   sockets_server {portno} {start | stop}\n");
+        printf("Send a string to the server, (whose first char is \"u\") and get it back in UPPER-CASE\n");
+        printf("If first char is \"q\", then we're telling the server to quit\n");
+        printf("For any other string, server returns \"Huh?\"\n");
+        return 0;
     }
 
-    // remove the FIFO in case it exists
-    unlink(fifo_read);
+    if (argc == 3)
+        portno = atoi(argv[1]);
 
-    // create the FIFO pseudo-file
-    if (mkfifo(fifo_read, 0666) != 0) {
-        perror("mkfifo error: ");
-        return -1;
+    if (strcmp(argv[argc-1],"start") == 0)
+        server_start();
+    else
+        server_stop();
+    return 0;
+}
+
+// ---------------------------------------- server_start -------------------------------------------
+void server_start() {
+    int master_sockfd;
+    socklen_t client_len;
+    struct sockaddr_in serv_addr, client_addr;
+    char buffer[256];
+    int nread;
+
+    // Create master socket:
+    if ((master_sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+        perror("Server: Cannot create master socket.");
+        exit(-1);
     }
 
-    // open it for reading:
-    fd_read = open(fifo_read, O_RDONLY);
-    if (fd_read < 0) {
-        printf("open(fifo_read) failed, returns: %d\n", fd_read);
-        return fd_read;
+    // create socket structure
+    bzero((char *) &serv_addr, sizeof(serv_addr));
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_addr.s_addr = INADDR_ANY;
+    serv_addr.sin_port = htons(portno);
+
+    // bind the socket to the local port
+    if (bind(master_sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0) {
+        perror("Server: Error on binding");
+        exit(1);
     }
 
-    // also open it for writing, but don't write anything to it (this is to prevent its closure when a client has finished writing to it).
-    if ((fd_write = open(fifo_read, O_WRONLY)) < 0) {
-        perror("Cannot open fifo_read for writing. ");
-        return fd_write;
-    }
+    // listen
+    listen(master_sockfd, 5);
 
-    while (1) {
-        how_much = read(fd_read, input, BUFSIZ);
-        if (how_much > 0) {
-            input[how_much]='\0';
-            if (handleArgs(input) == -1) {
-                printf("fifo_server quitting...\n");
-                close(fd_read);
-                unlink(fifo_read);
-                return 0;
+    client_len = sizeof(client_addr);
+    printf("Server listening on port %d\n", portno);
+
+    // master loop
+    while(TRUE) {
+        // block until a client connects
+        if ((current_sockfd = accept(master_sockfd, (struct sockaddr *) &client_addr, &client_len)) < 0) {
+            perror("Server: Error on accept()");
+            exit(1);
+        }
+
+        nread = read(current_sockfd, buffer, 1000);
+        if (nread > 0) {
+            // Quit command received?
+            if (buffer[0] == 'q') {
+                write(current_sockfd, QUITTING, sizeof(QUITTING));
+                close(current_sockfd);
+                close(master_sockfd);
+                printf("Server quitting...\n");
+                exit(0);
+            } else {
+                buffer[nread]='\0';
+                if (handleArgs(buffer) == -1) {
+                    printf("Server quitting...\n");
+                    close(current_sockfd);
+                }
             }
         }
+        else {	// zero length message?
+            write(current_sockfd, EMPTY_MSG, sizeof(EMPTY_MSG));
+            close(current_sockfd);
+            printf("Server: empty message received\n");
+        }
     }
-    return 0;
+}
+
+// ------------------------------------------- server_stop ------------------------------------------
+void server_stop() {
+    char receive_buffer[100];
+
+    send_to_server("localhost", portno, "q", receive_buffer, 100);
 }
 
 int handleArgs(char *message) {
@@ -154,11 +205,7 @@ int handleArgs(char *message) {
         return 1;
     }
 
-    //All prints will go to the file
-    if ((fd_out = open(fields[0], O_WRONLY)) < 0)
-        printf("Cannot write to %s\n", fields[0]);
-
-    if (command == ADD && !add(fields[2], fields[3])) {
+    if (command == ADD && !add(fields[1], fields[2])) {
         if (errmsg[0] != '\0')
             printf("|status: ERROR: %s|\n", errmsg);
         else
@@ -170,27 +217,27 @@ int handleArgs(char *message) {
         status();
     }
 
-    if (command == DISPLAY && !display(fields[2])) {
+    if (command == DISPLAY && !display(fields[1])) {
         if (errmsg[0] != '\0')
             printf("|status: ERROR: %s|\n", errmsg);
         else
-            printf("|status: ERROR: Cannot display %s|\n", fields[2]);
+            printf("|status: ERROR: Cannot display %s|\n", fields[1]);
         return 1;
     }
 
-    if (command == DELETE && !delete(fields[2])) {
+    if (command == DELETE && !delete(fields[1])) {
         if (errmsg[0] != '\0')
             printf("|status: ERROR: %s|\n", errmsg);
         else
-            printf("|status: ERROR: Cannot delete %s|\n", fields[2]);
+            printf("|status: ERROR: Cannot delete %s|\n", fields[1]);
         return 1;
     }
 
-    if (command == EDIT && !edit(fields[2])) {
+    if (command == EDIT && !edit(fields[1])) {
         if (errmsg[0] != '\0')
             printf("|status: ERROR: %s|\n", errmsg);
         else
-            printf("|status: ERROR: cannot edit %s|\n", fields[2]);
+            printf("|status: ERROR: cannot edit %s|\n", fields[1]);
         return 1;
     }
 
@@ -203,7 +250,6 @@ int handleArgs(char *message) {
             return 1;
         }
 
-    close(fd_out);
     return 0;
 }
 
@@ -213,62 +259,60 @@ int handleArgs(char *message) {
 //
 int parseArgs(char *message) {
     int nfields = SeparateIntoFields(message, fields, 5);
-    if (nfields < 2) return FALSE;
+    if (nfields < 1) return FALSE;
 
     // try zero-argument commands: list and stat
-    if (nfields == 2) {
-        if (strcmp(fields[1], "stat") == 0) {
+    if (nfields == 1) {
+        if (strcmp(fields[0], "stat") == 0) {
             command = STAT;
             return TRUE;
         }
         else {
-            sprintf(errmsg, "Unrecognized argument: %s", fields[1]);
+            sprintf(errmsg, "Unrecognized argument: %s", fields[0]);
             return FALSE;
         }
     }
     // try the one-argument commands: delete and display
-    else if (nfields == 3) {
-        if (strcmp(fields[1],"delete") == 0 && isPositive(fields[2])) {
+    else if (nfields == 2) {
+        if (strcmp(fields[0],"delete") == 0 && isPositive(fields[1])) {
             command = DELETE;
-            item_start = atoi(fields[2]);
+            item_start = atoi(fields[1]);
             return TRUE;
         }
-        else if (strcmp(fields[1], "display") == 0 && isPositive(fields[2])) {
+        else if (strcmp(fields[0], "display") == 0 && isPositive(fields[1])) {
             command = DISPLAY;
             item_start = atoi(fields[2]);
             return TRUE;
         }
         else {
-            sprintf(errmsg, "Unrecognized 2-argument call: %s %s", fields[1], fields[2]);
+            sprintf(errmsg, "Unrecognized 2-argument call: %s %s", fields[0], fields[1]);
             return FALSE;
         }
     }
     // try the two-argument command: add
-    else if (nfields == 4) {
-        if (strcmp(fields[1],"add") == 0) {
+    else if (nfields == 3) {
+        if (strcmp(fields[0],"add") == 0) {
             command = ADD;
+            subject = fields[1];
+            body = fields[2];
+            return TRUE;
+        }
+        else {
+            sprintf(errmsg, "Unrecognized 3-argument call: %s %s %s", fields[0], fields[1], fields[2]);
+            return FALSE;
+        }
+    }
+    // try the three-argument command: edit
+    else if (nfields == 4) {
+        if (strcmp(fields[0], "edit") == 0 && isPositive(fields[1])) {
+            command = EDIT;
+            item_start = atoi(fields[1]);
             subject = fields[2];
             body = fields[3];
             return TRUE;
         }
         else {
-            sprintf(errmsg, "Unrecognized 3-argument call: %s %s %s", fields[1], fields[2], fields[3]);
-            return FALSE;
-        }
-    }
-    // try the three-argument command: edit
-    else if (nfields == 5) {
-        if (strcmp(fields[1], "edit") == 0 && isPositive(fields[2])) {
-            command = EDIT;
-            item_start = atoi(fields[2]);
-            subject = fields[3];
-            body = fields[4];
-            return TRUE;
-        }
-        else {
-            printf("Field 1: %s\n", fields[1]);
-            printf("Field 2: %s\n", fields[2]);
-            sprintf(errmsg, "Unrecognized 4-argument call: %s %s %s %s", fields[1], fields[2], fields[3], fields[4]);
+            sprintf(errmsg, "Unrecognized 4-argument call: %s %s %s %s", fields[0], fields[1], fields[2], fields[3]);
             return FALSE;
         }
     }
@@ -384,7 +428,7 @@ int add(char *subject, char *body) {
     rewrite = TRUE;
     char *all;
     asprintf(&all, "|status: OK|\n");
-    write(fd_out, all, strlen(all));
+    write(current_sockfd, all, strlen(all));
 
     return TRUE;
 }
@@ -415,7 +459,7 @@ int edit(char *sn) {
     rewrite = TRUE;
     char *all;
     asprintf(&all, "|status: OK|\n");
-    write(fd_out, all, strlen(all));
+    write(current_sockfd, all, strlen(all));
     return TRUE;
 }
 
@@ -473,7 +517,7 @@ void status(void) {
         asprintf(&all, "%s%s%s%s", status_str, version_str, author_str, nitems_str);
     }
 
-    write(fd_out, all, strlen(all));
+    write(current_sockfd, all, strlen(all));
     return;
 }
 
@@ -515,7 +559,7 @@ int display(char *sn) {
 
     char *all;
     asprintf(&all, "%s%s%s%s%s", status_str, item_str, time_str, subject_str, body_str);
-    write(fd_out, all, strlen(all) + 50);
+    write(current_sockfd, all, strlen(all) + 50);
     return TRUE;
 }
 
@@ -549,15 +593,6 @@ int delete(char *sn) {
     rewrite = TRUE;
     char *all;
     asprintf(&all, "|status: OK|\n");
-    write(fd_out, all, strlen(all));
+    write(current_sockfd, all, strlen(all));
     return TRUE;
-}
-
-// ============================ the_handler ==================
-static void the_handler(int sig) {
-    printf("Signal caught: fifo_server terminated by signal %d\n", sig);
-    close(fd_read);
-    close(fd_write);
-    unlink(fifo_read);
-    exit(0);
 }
