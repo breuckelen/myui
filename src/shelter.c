@@ -41,7 +41,6 @@ int _quit = 0;
 void init() {
     //Initializing twig array
     twigs_size = numTwigs();
-    printf("\n%d", twigs_size);
     twigs_start = 0;
     twigs = (Twig *)malloc(1000 * sizeof(Twig));
     loadTwigs();

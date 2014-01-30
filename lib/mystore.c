@@ -266,6 +266,8 @@ int parseArgs(char *message) {
             return TRUE;
         }
         else {
+            printf("Field 1: %s\n", fields[1]);
+            printf("Field 2: %s\n", fields[2]);
             sprintf(errmsg, "Unrecognized 4-argument call: %s %s %s %s", fields[1], fields[2], fields[3], fields[4]);
             return FALSE;
         }
@@ -278,17 +280,26 @@ int parseArgs(char *message) {
 int SeparateIntoFields(char *s, char **fields, int max_fields) {
     int i;
     static char null_c = '\0';
+    int in_quote = 0;
 
     for (i = 0; i < max_fields; ++i) fields[i] = &null_c;
 
     for (i = 0; i < max_fields; ++i) {
+        if (*s == '"' && !in_quote) {
+            in_quote = 1;
+            ++s;
+        }
         while (*s && (*s == ' ' || *s == '\t' || *s == '\n')) ++s;	// skip whitespace
         if (!*s) return i;
         fields[i] = s;
         if (i == max_fields - 1) return i+1;
-        while (*s && *s != ' ' && *s != '\t' && *s != '\n') ++s;	// skip non-whitespace
+        while (*s && ((*s != ' ' && *s != '\t' && *s != '\n' && !in_quote) || (*s != '"' && in_quote))) {
+            ++s;	// skip non-whitespace
+        }
+        in_quote = 0;
         if (!*s) return i+1;
         *s++ = '\0';
+        while (*s && (*s == ' ' || *s == '\t' || *s == '\n')) ++s;	// skip whitespace
     }
     return -1;
 }

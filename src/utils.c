@@ -147,7 +147,15 @@ void loadTwigs() {
 
 //Add twig to the database (command)
 void addTwig(char *subject, char *message) {
-    char *cmd[3] = {"add", subject, message};
+    char *new_subject, *new_message;
+    if (strchr(subject, ' ') || strchr(message, ' ')) {
+        asprintf(&new_subject, "\"%s\"", subject);
+        asprintf(&new_message, "\"%s\"", message);
+    } else {
+        asprintf(&new_subject, "\"%s\"", subject);
+        asprintf(&new_message, "\"%s\"", message);
+    }
+    char *cmd[3] = {"add", new_subject, new_message};
     runCommand(3, cmd);
 }
 
@@ -155,7 +163,15 @@ void addTwig(char *subject, char *message) {
 void editTwig(int index, char *subject, char *message) {
     char num[5];
     sprintf(num, "%d", index + 1);
-    char *cmd[4] = {"edit", num, subject, message};
+    char *new_subject, *new_message;
+    if (strchr(subject, ' ') || strchr(message, ' ')) {
+        asprintf(&new_subject, "\"%s\"", subject);
+        asprintf(&new_message, "\"%s\"", message);
+    } else {
+        new_subject = subject;
+        new_message = message;
+    }
+    char *cmd[4] = {"edit", num, new_subject, new_message};
     runCommand(4, cmd);
 }
 
