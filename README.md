@@ -5,8 +5,9 @@ A twitter clone in the shell.
 
 ## Compiling
 * use `make` to make the ./shelter executable
+* run `make startserver` to start the database server
 * run `./shelter`, or use `make run` if you have xterm installed
-* use a 151 by 51 window
+* run `make stopserver` to stop the database server
 
 ## Controls
 
