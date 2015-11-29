@@ -8,6 +8,10 @@ struct KeyValue {
 };
 typedef struct KeyValue KeyValue;
 
+// other
+extern int send_to_server(char *server_name, int portno, char *send_buffer,
+        char *receive_buffer, int max_buf);
+
 //parsing
 char * readInput(FILE *fp);
 int numPairs(char *data);

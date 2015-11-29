@@ -307,11 +307,15 @@ void keypress(char c) {
 
 int main() {
     init();
+
     while(!_quit) {
         char c;
         if((c = getkey()) != KEY_NOTHING) {
             keypress(c);
         }
     }
+
     getkey_terminate();
+
+    return 0;
 }

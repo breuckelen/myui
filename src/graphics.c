@@ -296,7 +296,7 @@ void bufferClear(Buffer buf) {
     while(row <= buf.br.row) {
         if(col >= buf.br.col){
             col = buf.tl.col;
-            if(buf.heading.text == "VIEW TWIGS")
+            if(strcmp(buf.heading.text, "VIEW TWIGS") == 0)
                 buffer[row][buf.tl.col - 4] = ' ';
             row++;
         }

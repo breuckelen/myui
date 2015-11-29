@@ -97,7 +97,7 @@ int runCommand(int argc, char *argv[]) {
     return 0;
 }
 
-// -------------------------------------- gather_message -------------------------------
+// Gather message
 void gather_message(char *buffer, char **args, int nargs, int max_buf) {
     int i;
     int n = 0;

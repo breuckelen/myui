@@ -65,11 +65,18 @@ int send_to_server(char *server_name, int portno, char *send_buffer, char *recei
 int handleArgs(char *message);
 int parseArgs(char *message);
 int isPositive(char *s);
-int readData(void);
-int add(char *subject, char *body);
+int SeparateIntoFields(char *s, char **fields, int max_fields);
 void status(void);
 char *rstrip(char *s);
 void list(void);
+
+int readData(void);
+int writeData(void);
+
+int display(char *sn);
+int delete(char *sn);
+int add(char *subject, char *body);
+int edit(char *sn);
 
 // this describes the data item on disk
 struct data {
@@ -384,7 +391,7 @@ int readData(void) {
         }
         if ((current_carrier = calloc(1, sizeof(struct carrier))) == NULL) {  //allocate memory
             fclose(fp);
-            sprintf(errmsg,"Cannot allocate %d\n", sizeof(struct carrier));
+            sprintf(errmsg,"Cannot allocate %lu\n", sizeof(struct carrier));
             return FALSE;
         }
         current_carrier->theData = current_data;	// load the data into the carrier
